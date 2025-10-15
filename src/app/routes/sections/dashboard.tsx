@@ -1,8 +1,11 @@
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
 import { RouteWrapper } from '../components/RouteWrapper';
-const DemoFormPage = React.lazy(() => import('src/modules/demo/pages/demo-form'));
-const WelcomePage = React.lazy(() => import('src/modules/welcome/pages/welcome'));
+const DemoFormPage = React.lazy(() => import('src/modules/demo/demo-form'));
+const WelcomePage = React.lazy(() => import('src/pages/welcome'));
+const KycIndividualPage = React.lazy(() => import('src/pages/kycIndividual'));
+const RecommendationsPage = React.lazy(() => import('src/pages/recommendations'));
+const GroupsPage = React.lazy(() => import('src/pages/groups'));
 
 export const dashboardRoutes: RouteObject[] = [
   {
@@ -11,6 +14,36 @@ export const dashboardRoutes: RouteObject[] = [
       <RouteWrapper title="Welcome">
         <React.Suspense fallback={<div className="p-8">Loading...</div>}>
           <WelcomePage />
+        </React.Suspense>
+      </RouteWrapper>
+    ),
+  },
+  {
+    path: '/groups',
+    element: (
+      <RouteWrapper title="KYC Groups">
+        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
+          <GroupsPage />
+        </React.Suspense>
+      </RouteWrapper>
+    ),
+  },
+  {
+    path: '/recommendations',
+    element: (
+      <RouteWrapper title="Recommendations">
+        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
+          <RecommendationsPage />
+        </React.Suspense>
+      </RouteWrapper>
+    ),
+  },
+  {
+    path: '/individuals',
+    element: (
+      <RouteWrapper title="KYC Individuals">
+        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
+          <KycIndividualPage />
         </React.Suspense>
       </RouteWrapper>
     ),

@@ -5,6 +5,7 @@ export type UseTypingEffectOptions = {
   typingSpeed?: number;
   deleteSpeed?: number;
   delayBetweenWords?: number;
+  pauseAfterDelete?: number;
   loop?: boolean;
   startDelay?: number;
   caret?: boolean;
@@ -48,42 +49,13 @@ function splitGraphemes(str: string): string[] {
 
 type Phase = "typing" | "pausing" | "deleting" | "idle";
 
-type State = {
-  text: string;
-  index: number;
-  phase: Phase;
-};
-
-type Action =
-  | { type: "NEXT_CHAR"; next: string }
-  | { type: "PREV_CHAR"; next: string }
-  | { type: "SET_PHASE"; phase: Phase }
-  | { type: "NEXT_WORD" }
-  | { type: "RESET_TEXT" };
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case "NEXT_CHAR":
-      return { ...state, text: action.next, phase: "typing" };
-    case "PREV_CHAR":
-      return { ...state, text: action.next, phase: "deleting" };
-    case "SET_PHASE":
-      return { ...state, phase: action.phase };
-    case "NEXT_WORD":
-      return { text: "", index: state.index + 1, phase: "typing" };
-    case "RESET_TEXT":
-      return { ...state, text: "" };
-    default:
-      return state;
-  }
-}
-
 export function useTypingEffect(options: UseTypingEffectOptions): UseTypingEffectReturn {
   const {
     words,
     typingSpeed = 80,
     deleteSpeed = 40,
     delayBetweenWords = 1200,
+    pauseAfterDelete = 16,
     loop = true,
     startDelay = 0,
     caret = true,
@@ -92,128 +64,109 @@ export function useTypingEffect(options: UseTypingEffectOptions): UseTypingEffec
 
   const reduced = usePrefersReducedMotion();
   const safeWords = words?.length ? words : [""];
-  const [state, dispatch] = useReducer(reducer, {
-    text: "",
-    index: 0,
-    phase: startDelay > 0 ? "idle" : "typing",
-  });
+  // Stable key for words content to avoid rebuilding join in effect deps
+  const wordsKey = useMemo(() => words.join("\u0000"), [words]);
 
-  const currentWord = useMemo(() => {
-    const i = state.index % safeWords.length;
-    return safeWords[i] ?? "";
-  }, [state.index, safeWords]);
+  const [wordIndexState, setWordIndexState] = useReducer((n: number) => n + 1, 0);
+  const [text, setText] = useReducer((_: string, v: string) => v, "");
+  const [phase, setPhase] = useReducer((_: Phase, p: Phase) => p, startDelay > 0 ? "idle" : "typing");
 
+  const currentIndex = wordIndexState % Math.max(safeWords.length, 1);
+  const currentWord = safeWords[currentIndex] ?? "";
   const parts = useMemo(() => splitGraphemes(currentWord), [currentWord]);
 
-  const raf = useRef<number | null>(null);
-  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [visKey, bumpVisKey] = useReducer((n: number) => n + 1, 0);
 
-  const clearAll = () => {
-    if (raf.current != null) cancelAnimationFrame(raf.current);
-    if (timeout.current != null) clearTimeout(timeout.current);
-    raf.current = null;
-    timeout.current = null;
+  const clearTimer = () => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
   };
 
   useEffect(() => {
     const onVis = () => {
-      if (document.hidden) clearAll();
-      else tick();
+      if (!document.hidden) bumpVisKey();
     };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
   useEffect(() => {
-    clearAll();
+    // clear any existing timer before scheduling a new one
+    clearTimer();
+    // Allow timers to schedule even if the tab is hidden; browsers will throttle safely.
     if (reduced) {
-      // In reduced motion, just jump to the full word once
-      dispatch({ type: "RESET_TEXT" });
-      dispatch({ type: "SET_PHASE", phase: "typing" });
-      dispatch({ type: "NEXT_CHAR", next: currentWord });
-      dispatch({ type: "SET_PHASE", phase: "pausing" });
-      return;
+      // reduced motion: set full word and pause using async micro-task to avoid sync loops
+      timer.current = setTimeout(() => {
+        if (text !== currentWord) setText(currentWord);
+        if (phase !== "pausing") setPhase("pausing");
+      }, 0);
+      return () => clearTimer();
     }
-    if (state.phase === "idle" && startDelay > 0) {
-      timeout.current = setTimeout(() => {
-        dispatch({ type: "SET_PHASE", phase: "typing" });
-        tick();
-      }, startDelay);
-      return () => clearAll();
-    }
-    // Ensure we render at least the first character so users see immediate progress
-    if (!reduced && state.text.length === 0 && parts.length > 0) {
-      dispatch({ type: "NEXT_CHAR", next: parts[0] });
-    }
-    tick();
-    return () => clearAll();
-  }, [reduced, startDelay, currentWord]);
-  const tick = () => {
-    clearAll();
-    if (reduced) return;
 
-    const charCount = splitGraphemes(state.text).length;
-    const total = parts.length;
+    if (phase === "idle") {
+      if (startDelay > 0) {
+        timer.current = setTimeout(() => setPhase("typing"), startDelay);
+      } else {
+        timer.current = setTimeout(() => setPhase("typing"), 0);
+      }
+      return () => clearTimer();
+    }
 
     const rand = (base: number) => {
       const r = 1 + (Math.random() * 2 - 1) * Math.max(0, Math.min(jitter, 0.6));
       return Math.max(10, Math.round(base * r));
     };
 
-    if (state.phase === "typing") {
-      if (charCount < total) {
-        timeout.current = setTimeout(() => {
-          const next = parts.slice(0, charCount + 1).join("");
-          dispatch({ type: "NEXT_CHAR", next });
-          tick();
+    if (phase === "typing") {
+      const charCount = splitGraphemes(text).length;
+      // Seed first character immediately to avoid a blank frame on start
+      if ((charCount === 0 || !currentWord.startsWith(text)) && parts.length > 0) {
+        timer.current = setTimeout(() => setText(parts[0]), 0);
+        return () => clearTimer();
+      }
+      if (charCount < parts.length) {
+        timer.current = setTimeout(() => {
+          setText(parts.slice(0, charCount + 1).join(""));
         }, rand(typingSpeed));
       } else {
-        timeout.current = setTimeout(() => {
-          dispatch({ type: "SET_PHASE", phase: "deleting" });
-          tick();
-        }, delayBetweenWords);
+        timer.current = setTimeout(() => setPhase("deleting"), delayBetweenWords);
       }
-      return;
-    }
-
-    if (state.phase === "deleting") {
+    } else if (phase === "deleting") {
+      const charCount = splitGraphemes(text).length;
       if (charCount > 0) {
-        timeout.current = setTimeout(() => {
-          const next = parts.slice(0, charCount - 1).join("");
-          dispatch({ type: "PREV_CHAR", next });
-          tick();
+        timer.current = setTimeout(() => {
+          setText(parts.slice(0, charCount - 1).join(""));
         }, rand(deleteSpeed));
       } else {
-        if (!loop && state.index + 1 >= safeWords.length) {
-          dispatch({ type: "SET_PHASE", phase: "pausing" });
+        // finished deleting, advance index
+        if (!loop && wordIndexState + 1 >= safeWords.length) {
+          setPhase("pausing");
           return;
         }
-        // Move to next word without showing an empty frame: render first char immediately
-        const nextIndex = (state.index + 1) % safeWords.length;
-        const nextWord = safeWords[nextIndex] ?? "";
-        const nextFirst = splitGraphemes(nextWord).slice(0, 1).join("");
-        dispatch({ type: "NEXT_WORD" });
-        if (nextFirst) {
-          dispatch({ type: "NEXT_CHAR", next: nextFirst });
-        }
-        raf.current = requestAnimationFrame(tick);
+        // move to next word, then switch to typing after a tiny pause
+        setWordIndexState();
+        timer.current = setTimeout(() => setPhase("typing"), pauseAfterDelete);
       }
-      return;
     }
-  };
 
+    return () => clearTimer();
+  }, [phase, text, currentIndex, wordsKey, reduced, startDelay, typingSpeed, deleteSpeed, delayBetweenWords, pauseAfterDelete, loop, jitter, visKey]);
+
+  // If the words array identity/content changes, reset
   useEffect(() => {
-    if (reduced || document.hidden) return;
-    raf.current = requestAnimationFrame(() => tick());
-    return () => clearAll();
-  }, [state.text, state.phase, state.index, typingSpeed, deleteSpeed, delayBetweenWords, loop, jitter]);
+    setText("");
+    setPhase(startDelay > 0 ? "idle" : "typing");
+  }, [wordsKey, startDelay]);
 
-  const isTyping = state.phase === "typing";
-  const isDeleting = state.phase === "deleting";
-  const wordIndex = state.index % Math.max(safeWords.length, 1);
+  const isTyping = phase === "typing";
+  const isDeleting = phase === "deleting";
+  const wordIndex = currentIndex;
   const caretChar = caret ? "|" : "";
 
-  return { text: state.text, isTyping, isDeleting, wordIndex, caretChar };
+  return { text, isTyping, isDeleting, wordIndex, caretChar };
 }
 
 export default useTypingEffect;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Controller, FieldValues, Path, UseFormReturn } from 'react-hook-form';
+import { Controller, FieldValues, Path, UseFormReturn, FieldErrors, FieldError } from 'react-hook-form';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
@@ -16,7 +16,8 @@ export function RHFTextField<T extends FieldValues>({ name, label, placeholder, 
     formState: { errors },
   } = methods;
 
-  const error = (errors as any)[name]?.message as string | undefined;
+  const fieldError = (errors as FieldErrors<T>)[name] as FieldError | undefined;
+  const error = fieldError?.message;
 
   return (
     <div className="mb-4">

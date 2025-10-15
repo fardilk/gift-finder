@@ -2,14 +2,16 @@ import React from 'react';
 import HeadingTyping from 'src/shared/components/welcome/HeadingTyping';
 import TypingInputs from 'src/shared/components/welcome/TypingInputs';
 import KycBox from 'src/shared/components/welcome/KycBox';
+import { useNavigate } from 'react-router-dom';
 
 export default function WelcomePage() {
+  const navigate = useNavigate();
   function handleAskAI(text: string) {
-    // TODO: wire into AI command handler
     console.log('Ask AI:', text);
   }
   function handleKycSelect(type: 'individual' | 'group') {
-    console.log('KYC selected:', type);
+    if (type === 'individual') navigate('/individuals');
+    else navigate('/groups');
   }
 
   return (

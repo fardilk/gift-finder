@@ -6,6 +6,7 @@ const WelcomePage = React.lazy(() => import('src/pages/welcome'));
 const KycIndividualPage = React.lazy(() => import('src/pages/kycIndividual'));
 const RecommendationsPage = React.lazy(() => import('src/pages/recommendations'));
 const GroupsPage = React.lazy(() => import('src/pages/groups'));
+const IndividualDashboardPage = React.lazy(() => import('src/pages/individualDashboard'));
 
 export const dashboardRoutes: RouteObject[] = [
   {
@@ -24,6 +25,16 @@ export const dashboardRoutes: RouteObject[] = [
       <RouteWrapper title="KYC Groups">
         <React.Suspense fallback={<div className="p-8">Loading...</div>}>
           <GroupsPage />
+        </React.Suspense>
+      </RouteWrapper>
+    ),
+  },
+  {
+    path: '/dashboard',
+    element: (
+      <RouteWrapper title="Individual Dashboard">
+        <React.Suspense fallback={<div className="p-8">Loading dashboard...</div>}>
+          <IndividualDashboardPage />
         </React.Suspense>
       </RouteWrapper>
     ),

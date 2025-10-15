@@ -10,7 +10,7 @@ export function KycBox({ onSelect }: KycBoxProps) {
     <div className="mx-auto grid w-full max-w-2xl grid-cols-2 gap-4">
       <Button
         variant="default"
-        className="h-32 rounded-2xl border bg-white/70 text-left text-gray-800 shadow-sm backdrop-blur transition hover:shadow-md"
+        className="h-32 rounded-2xl border border-purple-500 bg-white/70 text-left text-gray-800 shadow-sm backdrop-blur transition hover:shadow-md"
         onClick={() => onSelect?.('individual')}
       >
         <div className="flex h-full w-full flex-col items-start justify-center p-4">
@@ -20,7 +20,7 @@ export function KycBox({ onSelect }: KycBoxProps) {
       </Button>
       <Button
         variant="default"
-        className="h-32 rounded-2xl border bg-white/70 text-left text-gray-800 shadow-sm backdrop-blur transition hover:shadow-md"
+        className="h-32 rounded-2xl border border-purple-500 bg-white/70 text-left text-gray-800 shadow-sm backdrop-blur transition hover:shadow-md"
         onClick={() => onSelect?.('group')}
       >
         <div className="flex h-full w-full flex-col items-start justify-center p-4">

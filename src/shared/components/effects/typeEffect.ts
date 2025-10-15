@@ -146,9 +146,11 @@ export function useTypingEffect(options: UseTypingEffectOptions): UseTypingEffec
           setPhase("pausing");
           return;
         }
-        // move to next word, then switch to typing after a tiny pause
-        setWordIndexState();
-        timer.current = setTimeout(() => setPhase("typing"), pauseAfterDelete);
+        // move to next word and resume typing after a tiny pause
+        timer.current = setTimeout(() => {
+          setWordIndexState();
+          setPhase("typing");
+        }, pauseAfterDelete);
       }
     }
 
@@ -183,8 +185,9 @@ export function useHeadingTyping(overrides?: Partial<UseTypingEffectOptions>) {
   return useTypingEffect({
     words: headingWords,
     typingSpeed: 70,
-    deleteSpeed: 35,
-    delayBetweenWords: 1200,
+    deleteSpeed: 28,
+    delayBetweenWords: 500,
+    pauseAfterDelete: 40,
     loop: true,
     startDelay: 200,
     caret: true, // steady caret (no blink handled in this file)

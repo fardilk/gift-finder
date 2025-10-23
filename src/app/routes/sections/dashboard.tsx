@@ -7,6 +7,7 @@ const KycIndividualPage = React.lazy(() => import('src/pages/kycIndividual'));
 const RecommendationsPage = React.lazy(() => import('src/pages/recommendations'));
 const GroupsPage = React.lazy(() => import('src/pages/groups'));
 const IndividualDashboardPage = React.lazy(() => import('src/pages/individualDashboard'));
+const PreviewComponentPage = React.lazy(() => import('src/pages/previewComponent'));
 
 export const dashboardRoutes: RouteObject[] = [
   {
@@ -45,6 +46,16 @@ export const dashboardRoutes: RouteObject[] = [
       <RouteWrapper title="Recommendations">
         <React.Suspense fallback={<div className="p-8">Loading...</div>}>
           <RecommendationsPage />
+        </React.Suspense>
+      </RouteWrapper>
+    ),
+  },
+  {
+    path: '/component',
+    element: (
+      <RouteWrapper title="Component Preview">
+        <React.Suspense fallback={<div className="p-8">Loading component...</div>}>
+          <PreviewComponentPage />
         </React.Suspense>
       </RouteWrapper>
     ),

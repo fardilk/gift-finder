@@ -6,7 +6,7 @@ import { Button } from '../../../ui/button';
 
 type Message = { id: string; role: 'user' | 'assistant'; content: string };
 
-export function AiReplyBox({ className, onSend }: { className?: string; onSend?: (prompt: string) => void }) {
+export function AiReplyBox({ className, onSend, fluid }: { className?: string; onSend?: (prompt: string) => void; fluid?: boolean }) {
   const [messages, setMessages] = React.useState<Message[]>([
     { id: 'm1', role: 'assistant', content: "Hello! I'm ready to assist. Tell me who you're gifting for or the occasion." },
   ]);
@@ -42,7 +42,7 @@ export function AiReplyBox({ className, onSend }: { className?: string; onSend?:
     setMessages((prev) => [...prev, reply]);
   }
 
-  const container = 'w-full md:w-[25vw] mb-6 rounded-2xl border border-purple-100 bg-white/80 p-4 shadow-sm shadow-purple-100/70 backdrop-blur';
+  const container = `w-full ${fluid ? '' : 'md:w-[25vw]'} mb-6 rounded-2xl border border-purple-100 bg-white/80 p-4 shadow-sm shadow-purple-100/70 backdrop-blur`;
 
   return (
     <section className={cn(container, className)}>
@@ -54,20 +54,24 @@ export function AiReplyBox({ className, onSend }: { className?: string; onSend?:
           className="max-h-[45vh] overflow-y-auto rounded-xl border border-purple-50 bg-white p-3"
         >
           <ul className="space-y-2">
-            {messages.map((m) => (
-              <li key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
-                <div
-                  className={cn(
-                    'max-w-[85%] break-words rounded-2xl px-3 py-2 text-sm',
-                    m.role === 'user'
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-800'
-                  )}
-                >
-                  {m.content}
-                </div>
-              </li>
-            ))}
+            {messages.map((m) => {
+              const bubbleWidth = fluid ? 'w-full' : 'max-w-[85%]';
+              return (
+                <li key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+                  <div
+                    className={cn(
+                      bubbleWidth,
+                      'break-words rounded-2xl px-3 py-2 text-sm',
+                      m.role === 'user'
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-800'
+                    )}
+                  >
+                    {m.content}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
 

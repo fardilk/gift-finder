@@ -43,8 +43,8 @@ export default function IndividualDashboardPage() {
 				))}
 			</section>
 
-			<section className="mt-10 grid gap-6 lg:grid-cols-5">
-				<div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm lg:col-span-3">
+			<section className="mt-10 grid gap-6">
+				<div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
 					<h2 className="text-lg font-semibold text-slate-900">Upcoming occasions</h2>
 					<ul className="mt-4 space-y-4">
 						{upcomingOccasions.map((occasion) => (
@@ -57,13 +57,6 @@ export default function IndividualDashboardPage() {
 							</li>
 						))}
 					</ul>
-				</div>
-				<div className="rounded-2xl border border-dashed border-purple-200 bg-white/70 p-6 text-center text-sm text-slate-500 lg:col-span-2">
-					<h2 className="text-lg font-semibold text-slate-900">Personalized recommendations</h2>
-					<p className="mt-2">
-						Connect your wishlist or start a new gift journey to see curated suggestions based on shared interests.
-					</p>
-					<Button className="mt-4">See recommendations</Button>
 				</div>
 			</section>
 		</GlobalLayout>

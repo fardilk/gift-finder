@@ -2,10 +2,12 @@ import * as React from 'react';
 import { ProfileAssistant } from './profileAssistant';
 import AiReplyBox from './aiReplyBox';
 import { useAiResults } from './hooks/useAiResults';
+import { useNavigate } from 'react-router-dom';
 
 export default function FloatingAiChat() {
   const [open, setOpen] = React.useState(false);
   const { submit } = useAiResults();
+  const navigate = useNavigate();
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -52,7 +54,24 @@ export default function FloatingAiChat() {
               </button>
             </div>
             <div className="p-3">
-              <AiReplyBox className="w-full" fluid onSend={(prompt) => submit(prompt)} />
+              <AiReplyBox
+                className="w-full"
+                fluid
+                onSend={(prompt) => {
+                  submit(prompt);
+                  // If prompt includes gift-related intent, route to AI Recommendation page
+                  const p = prompt.toLowerCase();
+                  const isGift = /\b(gift|hamper|hampers|present|kado)\b/.test(p);
+                  if (isGift) {
+                    try {
+                      sessionStorage.setItem('ai_reco_prompt', prompt);
+                    } catch (e) {
+                      // ignore storage errors
+                    }
+                    navigate('/dashboard/ai-recommendation', { state: { prompt } });
+                  }
+                }}
+              />
             </div>
           </div>
         </div>

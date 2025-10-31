@@ -4,6 +4,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter } from 'react-router-dom';
 import App from '../app';
 import { CONFIG } from '../config-global';
+import { Provider } from 'react-redux';
+import { store } from 'src/store/store';
 
 // Reload Window on Vite preload error
 window.addEventListener('vite:preloadError', () => {
@@ -17,7 +19,9 @@ root.render(
     <HelmetProvider>
       <BrowserRouter basename={CONFIG.site.basePath}>
         <Suspense>
-          <App />
+          <Provider store={store}>
+            <App />
+          </Provider>
         </Suspense>
       </BrowserRouter>
     </HelmetProvider>

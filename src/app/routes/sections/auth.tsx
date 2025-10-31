@@ -1,13 +1,17 @@
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
 import { RouteWrapper } from '../components/RouteWrapper';
+const LoginPage = React.lazy(() => import('src/pages/login'));
+const RegistrationPage = React.lazy(() => import('src/pages/registration'));
 
 export const authRoutes: RouteObject[] = [
   {
     path: '/login',
     element: (
       <RouteWrapper title="Login">
-        <div className="p-8">Login Page</div>
+        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
+          <LoginPage />
+        </React.Suspense>
       </RouteWrapper>
     ),
   },
@@ -15,7 +19,19 @@ export const authRoutes: RouteObject[] = [
     path: '/register',
     element: (
       <RouteWrapper title="Register">
-        <div className="p-8">Register Page</div>
+        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
+          <RegistrationPage />
+        </React.Suspense>
+      </RouteWrapper>
+    ),
+  },
+  {
+    path: '/registration',
+    element: (
+      <RouteWrapper title="Register">
+        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
+          <RegistrationPage />
+        </React.Suspense>
       </RouteWrapper>
     ),
   },

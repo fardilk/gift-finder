@@ -1,91 +1,98 @@
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
-import { RouteWrapper } from '../components/RouteWrapper';
+import { wrapRoute } from '../utils';
 const DemoFormPage = React.lazy(() => import('src/modules/demo/demo-form'));
 const WelcomePage = React.lazy(() => import('src/pages/welcome'));
-const KycIndividualPage = React.lazy(() => import('src/pages/kycIndividual'));
 const RecommendationsPage = React.lazy(() => import('src/pages/recommendations'));
-const GroupsPage = React.lazy(() => import('src/pages/groups'));
-const IndividualDashboardPage = React.lazy(() => import('src/pages/individualDashboard'));
+const GroupsPage = React.lazy(() => import('src/pages/groups/groups'));
+const GroupRoomPage = React.lazy(() => import('src/pages/groups/groupRoom'));
+const GroupCreatePage = React.lazy(() => import('src/pages/groups/groupCreate'));
+const AffiliateSettingPage = React.lazy(() => import('src/pages/affiliate/settings'));
+const AffiliateMasterPage = React.lazy(() => import('src/pages/affiliate/master'));
+const IndividualDashboardPage = React.lazy(() => import('src/pages/dashboard'));
 const PreviewComponentPage = React.lazy(() => import('src/pages/previewComponent'));
+const AiRecommendationPage = React.lazy(() => import('src/pages/ai-recommendation'));
+const ItemRecommendationDetailPage = React.lazy(() => import('src/pages/ai-recommendation/item-recommendation/itemRecommendationDetail'));
+const MyProfilePage = React.lazy(() => import('src/pages/settings/profile'));
+const AccountsPage = React.lazy(() => import('src/pages/settings/accounts'));
 
 export const dashboardRoutes: RouteObject[] = [
   {
     path: '/',
-    element: (
-      <RouteWrapper title="Welcome">
-        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
-          <WelcomePage />
-        </React.Suspense>
-      </RouteWrapper>
-    ),
+    element: wrapRoute(WelcomePage, 'Welcome', { useGlobalLayout: false }),
   },
   {
     path: '/groups',
-    element: (
-      <RouteWrapper title="KYC Groups">
-        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
-          <GroupsPage />
-        </React.Suspense>
-      </RouteWrapper>
-    ),
+    element: wrapRoute(GroupsPage, 'KYC Groups', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/groups/create',
+    element: wrapRoute(GroupCreatePage, 'Create Group', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/groups/:groupId',
+    element: wrapRoute(GroupRoomPage, 'Group Room', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/affiliate-setting',
+    element: wrapRoute(AffiliateSettingPage, 'Affiliate Settings', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/affiliate-setting/master',
+    element: wrapRoute(AffiliateMasterPage, 'Master Affiliate', { authOnly: true, useGlobalLayout: true }),
   },
   {
     path: '/dashboard',
-    element: (
-      <RouteWrapper title="Individual Dashboard">
-        <React.Suspense fallback={<div className="p-8">Loading dashboard...</div>}>
-          <IndividualDashboardPage />
-        </React.Suspense>
-      </RouteWrapper>
-    ),
+    element: wrapRoute(IndividualDashboardPage, 'Individual Dashboard', { dashboardAccess: true, useGlobalLayout: true }),
   },
   {
     path: '/recommendations',
-    element: (
-      <RouteWrapper title="Recommendations">
-        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
-          <RecommendationsPage />
-        </React.Suspense>
-      </RouteWrapper>
-    ),
+    element: wrapRoute(RecommendationsPage, 'Recommendations', { useGlobalLayout: true }),
   },
   {
     path: '/component',
-    element: (
-      <RouteWrapper title="Component Preview">
-        <React.Suspense fallback={<div className="p-8">Loading component...</div>}>
-          <PreviewComponentPage />
-        </React.Suspense>
-      </RouteWrapper>
-    ),
+    element: wrapRoute(PreviewComponentPage, 'Component Preview', { useGlobalLayout: true }),
+  },
+  {
+    path: '/dashboard/ai-recommendation',
+    element: wrapRoute(AiRecommendationPage, 'AI Recommendation', { useGlobalLayout: true }),
+  },
+  {
+    path: '/ai-recommendation', // alias to match backend menu URL
+    element: wrapRoute(AiRecommendationPage, 'AI Recommendation', { useGlobalLayout: true }),
+  },
+  {
+    path: '/ai-recommendation/:itemId',
+    element: wrapRoute(ItemRecommendationDetailPage, 'Recommendation Detail', { useGlobalLayout: true }),
+  },
+  {
+    path: '/dashboard/profile',
+    element: wrapRoute(MyProfilePage, 'My Profile', { useGlobalLayout: true }),
+  },
+  {
+    path: '/profile',
+    element: wrapRoute(MyProfilePage, 'My Profile', { useGlobalLayout: true }),
+  },
+  {
+    path: '/dashboard/settings/accounts',
+    element: wrapRoute(AccountsPage, 'Accounts', { useGlobalLayout: true }),
+  },
+  {
+    path: '/settings/accounts',
+    element: wrapRoute(AccountsPage, 'Accounts', { useGlobalLayout: true }),
   },
   {
     path: '/individuals',
-    element: (
-      <RouteWrapper title="KYC Individuals">
-        <React.Suspense fallback={<div className="p-8">Loading...</div>}>
-          <KycIndividualPage />
-        </React.Suspense>
-      </RouteWrapper>
-    ),
+    element: wrapRoute(IndividualDashboardPage, 'KYC Individuals', { authOnly: true, useGlobalLayout: true }),
   },
   {
     path: '/about',
     element: (
-      <RouteWrapper title="About">
-        <div className="p-8">About page</div>
-      </RouteWrapper>
+      <div className="p-8">About page</div>
     ),
   },
   {
     path: '/demo-form',
-    element: (
-      <RouteWrapper title="Demo Form">
-        <React.Suspense fallback={<div className="p-8">Loading form...</div>}>
-          <DemoFormPage />
-        </React.Suspense>
-      </RouteWrapper>
-    ),
+    element: wrapRoute(DemoFormPage, 'Demo Form', { useGlobalLayout: true }),
   },
 ];

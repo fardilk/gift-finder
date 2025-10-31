@@ -1,7 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
+import picksReducer from './picksSlice';
+import groupsReducer from './groupsSlice';
+import affiliateReducer from './affiliateSlice';
 
 export const store = configureStore({
-  reducer: {},
+  reducer: {
+    picks: picksReducer,
+    groups: groupsReducer,
+    affiliate: affiliateReducer,
+  },
 });
 
 export type RootState = ReturnType<typeof store.getState>;

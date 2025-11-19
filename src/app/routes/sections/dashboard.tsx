@@ -7,6 +7,9 @@ const RecommendationsPage = React.lazy(() => import('src/pages/recommendations')
 const GroupsPage = React.lazy(() => import('src/pages/groups/groups'));
 const GroupRoomPage = React.lazy(() => import('src/pages/groups/groupRoom'));
 const GroupCreatePage = React.lazy(() => import('src/pages/groups/groupCreate'));
+const OccasionsPage = React.lazy(() => import('src/pages/occasion/occasions'));
+const OccasionCreatePage = React.lazy(() => import('src/pages/occasion/occasionCreate'));
+const OccasionRoomPage = React.lazy(() => import('src/pages/occasion/occasionRoom'));
 const AffiliateSettingPage = React.lazy(() => import('src/pages/affiliate/settings'));
 const AffiliateMasterPage = React.lazy(() => import('src/pages/affiliate/master'));
 const IndividualDashboardPage = React.lazy(() => import('src/pages/dashboard'));
@@ -15,6 +18,9 @@ const AiRecommendationPage = React.lazy(() => import('src/pages/ai-recommendatio
 const ItemRecommendationDetailPage = React.lazy(() => import('src/pages/ai-recommendation/item-recommendation/itemRecommendationDetail'));
 const MyProfilePage = React.lazy(() => import('src/pages/settings/profile'));
 const AccountsPage = React.lazy(() => import('src/pages/settings/accounts'));
+const UserManagementPage = React.lazy(() => import('src/pages/user-management/userManagement'));
+const CreateUserPage = React.lazy(() => import('src/pages/user-management/detail/createUserForms'));
+const ViewDetailUserPage = React.lazy(() => import('src/pages/user-management/detail/viewDetailUser'));
 
 export const dashboardRoutes: RouteObject[] = [
   {
@@ -32,6 +38,18 @@ export const dashboardRoutes: RouteObject[] = [
   {
     path: '/groups/:groupId',
     element: wrapRoute(GroupRoomPage, 'Group Room', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/occasion',
+    element: wrapRoute(OccasionsPage, 'Occasions', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/occasion/create',
+    element: wrapRoute(OccasionCreatePage, 'Create Occasion', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/occasion/:occasionId',
+    element: wrapRoute(OccasionRoomPage, 'Occasion Room', { authOnly: true, useGlobalLayout: true }),
   },
   {
     path: '/affiliate-setting',
@@ -66,10 +84,6 @@ export const dashboardRoutes: RouteObject[] = [
     element: wrapRoute(ItemRecommendationDetailPage, 'Recommendation Detail', { useGlobalLayout: true }),
   },
   {
-    path: '/dashboard/profile',
-    element: wrapRoute(MyProfilePage, 'My Profile', { useGlobalLayout: true }),
-  },
-  {
     path: '/profile',
     element: wrapRoute(MyProfilePage, 'My Profile', { useGlobalLayout: true }),
   },
@@ -80,6 +94,18 @@ export const dashboardRoutes: RouteObject[] = [
   {
     path: '/settings/accounts',
     element: wrapRoute(AccountsPage, 'Accounts', { useGlobalLayout: true }),
+  },
+  {
+    path: '/user-management',
+    element: wrapRoute(UserManagementPage, 'User Management', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/user-management/create',
+    element: wrapRoute(CreateUserPage, 'Create User', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/user-management/:userId',
+    element: wrapRoute(ViewDetailUserPage, 'User Detail', { authOnly: true, useGlobalLayout: true }),
   },
   {
     path: '/individuals',

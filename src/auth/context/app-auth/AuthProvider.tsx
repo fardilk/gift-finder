@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { loginApi, meApi, type User } from 'src/auth/api';
+import { setAuthTokens } from 'src/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 
 type AuthContextValue = {
@@ -15,6 +16,7 @@ type AuthContextValue = {
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined);
 
 const TOKEN_KEY = 'auth_token';
+const REFRESH_KEY = 'refresh_token';
 const GUEST_KEY = 'guest_mode';
 const AUTH_FLAG = 'auth_authenticated';
 
@@ -30,8 +32,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = React.useCallback(async (email: string, password: string) => {
     const res = await loginApi({ email, password });
     if (res?.accessToken) {
-      localStorage.setItem(TOKEN_KEY, res.accessToken);
+      setAuthTokens(res.accessToken, res.refreshToken ?? null);
       setToken(res.accessToken);
+      localStorage.setItem(TOKEN_KEY, res.accessToken);
+    }
+    if (res?.refreshToken) {
+      localStorage.setItem(REFRESH_KEY, res.refreshToken);
     }
     localStorage.setItem(AUTH_FLAG, '1');
     localStorage.removeItem(GUEST_KEY);
@@ -48,9 +54,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.invalidateQueries({ queryKey: ['menu'] });
   }, []);
 
+  // Keep localStorage in sync with `token` state so refresh preserves it
+  React.useEffect(() => {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  }, [token]);
+
   const loginGuest = React.useCallback(() => {
     localStorage.setItem(GUEST_KEY, '1');
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(AUTH_FLAG);
     setIsGuest(true);
     setIsAuthenticated(false);
@@ -59,13 +75,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = React.useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(GUEST_KEY);
     localStorage.removeItem(AUTH_FLAG);
+    setAuthTokens(null, null);
     setToken(null);
     setIsGuest(false);
     setIsAuthenticated(false);
     setUser(null);
     queryClient.removeQueries({ queryKey: ['menu'] });
+  }, []);
+
+  // Persist auth state - restore from localStorage on mount
+  React.useEffect(() => {
+    const storedToken = localStorage.getItem(TOKEN_KEY);
+    const storedAuthFlag = localStorage.getItem(AUTH_FLAG);
+    
+    if (storedToken || storedAuthFlag === '1') {
+      setIsAuthenticated(true);
+      if (storedToken) {
+        setToken(storedToken);
+        setAuthTokens(storedToken, localStorage.getItem(REFRESH_KEY));
+      }
+    }
   }, []);
 
   // Hydrate user from /auth/me when authenticated (e.g., cookie sessions)

@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import useTypingEffect from 'src/shared/components/effects/typeEffect';
 import { MoreVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { hash16 } from 'src/shared/utils/hashId';
 import { useDispatch } from 'react-redux';
 import { addPick } from 'src/store/picksSlice';
 
@@ -89,6 +90,7 @@ function useRecommendations(): RecoItem[] {
 function Card({ item }: { item: RecoItem }) {
   const [open, setOpen] = React.useState(false);
   const dispatch = useDispatch();
+  const hash = React.useMemo(() => hash16(item.id), [item.id]);
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="aspect-4/3 w-full bg-slate-100">
@@ -144,7 +146,7 @@ function Card({ item }: { item: RecoItem }) {
         <div className="mt-2 text-xs font-medium text-slate-900">{item.cost}</div>
           <div className="mt-2">
             <Link
-              to={`/ai-recommendation/${item.id}`}
+              to={`/ai-recommendation/${hash}`}
               className="inline-flex items-center gap-1 rounded-md border border-purple-200 px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-50"
             >
               <i className="fa-solid fa-circle-info" /> See details

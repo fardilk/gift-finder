@@ -15,7 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../../st
 import { cn } from '../../../utils/cn';
 import { useMenu } from 'src/app/routes/hooks/use-menu';
 import type { MenuEntry } from 'src/auth/api';
-import { useAuth } from 'src/auth/context/app-auth/AuthProvider';
+// Menu is fully backend-driven; no auth-based injections here.
 
 const baseItemClass = 'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors duration-200';
 const activeItemClass = 'bg-purple-50 text-purple-700 shadow-sm';
@@ -37,7 +37,7 @@ type UiMenuItem = {
   title: string;
   url?: string;
   iconComp?: LucideIcon;
-  faIconClass?: string; // Optional Font Awesome icon class
+  faIconClass?: string; 
   children?: UiMenuItem[];
 };
 
@@ -119,7 +119,6 @@ function ParentItem({ item }: { item: UiMenuItem }) {
 
 export function SidebarMenus() {
   const { data: menus, isLoading, error, refetch } = useMenu();
-  const { isAuthenticated } = useAuth();
 
   // Normalize backend menu to UI-friendly structure
   const iconMap: Record<string, LucideIcon> = React.useMemo(
@@ -147,33 +146,14 @@ export function SidebarMenus() {
   }, [iconMap]);
 
   const uiMenus = React.useMemo(() => {
-    const base = menus ? menus.map(toUi) : [];
-    // Inject a Groups nav if missing and user is authenticated
-    const hasGroups = base.some((m) => m.url === '/groups' || m.title.toLowerCase() === 'groups');
-    if (isAuthenticated && !hasGroups) {
-      base.push({
-        key: 'groups',
-        title: 'Groups',
-        url: '/groups',
-        faIconClass: 'fa-solid fa-users',
-      });
+    return menus ? menus.map(toUi) : [];
+  }, [menus, toUi]);
+
+  React.useEffect(() => {
+    if (uiMenus && uiMenus.length) {
+      console.log('Sidebar normalized menu (UI):', uiMenus);
     }
-    // Inject Affiliate nav with children if missing
-    const hasAffiliate = base.some((m) => m.url === '/affiliate-setting' || m.title.toLowerCase() === 'affiliate');
-    if (isAuthenticated && !hasAffiliate) {
-      base.push({
-        key: 'affiliate',
-        title: 'Affiliate',
-        url: '/affiliate-setting',
-        faIconClass: 'fa-solid fa-link',
-        children: [
-          { key: 'affiliate-settings', title: 'Settings', url: '/affiliate-setting', faIconClass: 'fa-solid fa-gear' } as UiMenuItem,
-          { key: 'affiliate-master', title: 'Master', url: '/affiliate-setting/master', faIconClass: 'fa-solid fa-database' } as UiMenuItem,
-        ],
-      });
-    }
-    return base;
-  }, [menus, toUi, isAuthenticated]);
+  }, [uiMenus]);
   return (
     <nav className="flex flex-col gap-1">
       {isLoading && <div className="px-3 py-2 text-sm text-slate-500">Loading menu…</div>}

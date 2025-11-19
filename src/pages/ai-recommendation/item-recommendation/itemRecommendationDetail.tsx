@@ -2,10 +2,12 @@ import * as React from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import MarketplaceLinks from './MarketplaceLinks';
 import VideoReview from './VideoReview';
-import ImageGallery from './ImageGallery';
+import ImageCarousel from './ImageCarousel';
+import { useDispatch } from 'react-redux';
+import { addPick } from 'src/store/picksSlice';
 import ProsCons from './ProsCons';
-import SocialLinks from './SocialLinks';
 import CustomerReviews from './CustomerReviews';
+import { matchHashedId } from 'src/shared/utils/hashId';
 
 // Shared item shape
 type RecoItem = {
@@ -32,6 +34,7 @@ type DetailData = {
   videoUrl?: string; // YouTube URL
   social?: Partial<Record<'instagram' | 'youtube' | 'tiktok' | 'twitter' | 'facebook', string>>;
   reviews?: Review[];
+  priceRange?: string; // e.g. "$25 - $40"
 };
 
 function getBaseItems(): Record<string, RecoItem> {
@@ -101,10 +104,11 @@ function buildDetail(id: string): DetailData | null {
   };
 
   const videos: Record<string, string> = {
-    h1: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
-    h2: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
-    h3: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-    h4: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+    // Use direct embeddable URLs to guarantee streaming in iframe
+    h1: 'https://www.youtube.com/embed/aqz-KE-bpKQ?rel=0',
+    h2: 'https://www.youtube.com/embed/ysz5S6PUM-U?rel=0',
+    h3: 'https://www.youtube.com/embed/jNQXAC9IVRw?rel=0',
+    h4: 'https://www.youtube.com/embed/mLoynSMpjKA?rel=0',
   };
 
   const pros: Record<string, string[]> = {
@@ -152,12 +156,25 @@ function buildDetail(id: string): DetailData | null {
     cons: cons[id] || commonCons,
     social: socialBase[id],
     reviews: reviews[id],
+    priceRange:
+      id === 'h1' ? '$25 - $40' :
+      id === 'h2' ? '$30 - $55' :
+      id === 'h3' ? '$35 - $60' :
+      id === 'h4' ? '$28 - $50' : undefined,
   } as DetailData;
 }
 
 export default function ItemRecommendationDetail() {
   const { itemId = '' } = useParams();
-  const data = React.useMemo(() => buildDetail(itemId), [itemId]);
+  const resolvedId = React.useMemo(() => {
+    // Support old ids for backward compatibility
+    const baseIds = Object.keys(getBaseItems());
+    if (baseIds.includes(itemId)) return itemId;
+    const match = matchHashedId(baseIds as Array<keyof ReturnType<typeof getBaseItems>>, itemId);
+    return match || '';
+  }, [itemId]);
+  const data = React.useMemo(() => buildDetail(resolvedId), [resolvedId]);
+  const dispatch = useDispatch();
 
   if (!data) {
     return (
@@ -176,32 +193,100 @@ export default function ItemRecommendationDetail() {
   }
 
   const query = data.item.title || 'gift hamper';
+  const avgRating = React.useMemo(() => {
+    const arr = data.reviews ?? [];
+    if (!arr.length) return 0;
+    const sum = arr.reduce((acc, r) => acc + (r.rating || 0), 0);
+    return Math.round((sum / arr.length) * 10) / 10;
+  }, [data.reviews]);
+
+  function Stars({ value }: { value: number }) {
+    const clamped = Math.max(0, Math.min(5, value));
+    return (
+      <div className="text-yellow-500">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <i
+            key={i}
+            className={[
+              'fa-solid',
+              i < Math.round(clamped) ? 'fa-star' : 'fa-star-half-stroke opacity-30',
+              'mr-0.5',
+            ].join(' ')}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  function truncate(s: string, max = 360) {
+    if (s.length <= max) return s;
+    return s.slice(0, max - 1) + '…';
+  }
+
+  function toRupiahDisplay(v?: string) {
+    if (!v) return '-';
+    const parts = v.split('-').map((p) => `Rp ${p.trim().replace(/^\$/,'')}`);
+    return parts.join(' - ');
+  }
 
   return (
     <section className="space-y-6">
-      <header className="flex items-start justify-between gap-4">
-        <div>
+      {/* Top section: two columns */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-10">
+        {/* Left: Carousel with thumbnails and indicators */}
+        <div className="md:col-span-4">
+          <ImageCarousel images={data.gallery} title={data.item.title} />
+        </div>
+        {/* Right: Info */}
+        <div className="space-y-3 md:col-span-6">
           <h1 className="text-2xl font-semibold text-slate-900">{data.item.title}</h1>
-          <p className="mt-1 text-sm text-slate-600">{data.item.description}</p>
-        </div>
-        <div className="text-right text-sm font-medium text-slate-900">{data.item.cost}</div>
-      </header>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className="font-semibold text-slate-900">
+              {data.priceRange ? <span>{toRupiahDisplay(data.priceRange)}</span> : <span>{toRupiahDisplay(data.item.cost)}</span>}
+            </div>
+            <div className="flex items-center gap-2 text-slate-700">
+              <Stars value={avgRating} />
+              <span className="text-xs">{avgRating}/5</span>
+              {data.reviews?.length ? <span className="text-xs text-slate-500">({data.reviews.length} reviews)</span> : null}
+            </div>
+          </div>
+          <p className="text-sm text-slate-700">{truncate(data.item.description, 360)}</p>
 
-      <MarketplaceLinks query={query} />
+          {/* Buy links in two columns */}
+          <MarketplaceLinks query={query} variant="grid2" price={toRupiahDisplay(data.item.cost)} />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="md:col-span-1">
-          <VideoReview videoUrl={data.videoUrl} title={data.item.title} />
+          {/* Pros & Cons above actions */}
+          <ProsCons pros={data.pros} cons={data.cons} stacked />
+
+          {/* Actions: Save to picks and Report */}
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button
+              className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              onClick={() =>
+                dispatch(
+                  addPick({
+                    id: data.item.id,
+                    title: data.item.title,
+                    imageUrl: data.item.imageUrl,
+                    description: data.item.description,
+                    cost: toRupiahDisplay(data.priceRange || data.item.cost),
+                  })
+                )
+              }
+            >
+              <i className="fa-regular fa-bookmark" /> Save to Picks
+            </button>
+            <ReportButton itemId={data.item.id} itemTitle={data.item.title} />
+          </div>
         </div>
-        <div className="md:col-span-2">
-          <ImageGallery images={data.gallery} title={data.item.title} />
-        </div>
+      </div>
+
+      {/* Video section only */}
+      <section>
+        <VideoReview videoUrl={data.videoUrl} title={data.item.title} heading="Video Streaming" />
       </section>
 
-      <ProsCons pros={data.pros} cons={data.cons} />
-
-      <SocialLinks social={data.social} />
-
+      {/* Testimonials after video */}
       <CustomerReviews reviews={data.reviews} />
 
       <div className="pt-2 text-xs">
@@ -210,5 +295,50 @@ export default function ItemRecommendationDetail() {
         </RouterLink>
       </div>
     </section>
+  );
+}
+
+function ReportButton({ itemId, itemTitle }: { itemId: string; itemTitle: string }) {
+  const [open, setOpen] = React.useState(false);
+  const [text, setText] = React.useState('');
+  return (
+    <div className="inline-flex flex-col gap-2">
+      <button
+        className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <i className="fa-solid fa-flag" /> Report suggestion
+      </button>
+      {open && (
+        <div className="w-full max-w-sm rounded-md border border-slate-200 bg-white p-2 text-sm shadow-sm">
+          <div className="text-xs text-slate-500">Tell us what’s not appropriate about “{itemTitle}”.</div>
+          <textarea
+            className="mt-2 w-full resize-y rounded border border-slate-200 p-2 text-sm outline-none focus:ring-2 focus:ring-red-200"
+            rows={3}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Spam, unsafe, incorrect, etc."
+          />
+          <div className="mt-2 flex justify-end gap-2">
+            <button className="rounded-md px-3 py-1 text-sm text-slate-600 hover:bg-slate-100" onClick={() => setOpen(false)}>
+              Cancel
+            </button>
+            <button
+              className="rounded-md bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700"
+              onClick={() => {
+                // For now we simply log. Replace with API later.
+                // eslint-disable-next-line no-console
+                console.log('REPORT', { itemId, itemTitle, text });
+                setOpen(false);
+                setText('');
+                alert('Thanks! Your report has been submitted.');
+              }}
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

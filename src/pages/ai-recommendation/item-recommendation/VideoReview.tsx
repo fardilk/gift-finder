@@ -3,6 +3,8 @@ import * as React from 'react';
 type Props = {
   videoUrl?: string;
   title: string;
+  heading?: string; // e.g., "Video Streaming"
+  expandOnClick?: boolean; // clicking toggles expanded styling
 };
 
 function toEmbedUrl(url?: string) {
@@ -27,11 +29,20 @@ function toEmbedUrl(url?: string) {
   return undefined;
 }
 
-export default function VideoReview({ videoUrl, title }: Props) {
+export default function VideoReview({ videoUrl, title, heading = 'Video Streaming', expandOnClick = true }: Props) {
   const embed = toEmbedUrl(videoUrl);
+  const [expanded, setExpanded] = React.useState(false);
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-2">
-      <div className="aspect-video w-full overflow-hidden rounded-lg bg-black/5">
+    <div className={`rounded-xl border border-slate-200 bg-white ${expanded ? 'p-0' : 'p-2'}`}>
+      <div className="px-2 pt-2">
+        <div className="text-sm font-semibold text-slate-900">{heading}</div>
+      </div>
+      <div
+        className={`w-full overflow-hidden ${expanded ? 'rounded-none' : 'rounded-lg'} bg-black/5 ${expanded ? '' : 'mt-1'} ${expanded ? 'aspect-video' : 'aspect-video'}`}
+        onClick={() => expandOnClick && setExpanded((v) => !v)}
+        role={expandOnClick ? 'button' : undefined}
+        aria-label={expandOnClick ? 'Toggle video size' : undefined}
+      >
         {embed ? (
           <iframe
             className="h-full w-full"
@@ -46,14 +57,7 @@ export default function VideoReview({ videoUrl, title }: Props) {
           <div className="flex h-full w-full items-center justify-center text-xs text-slate-500">No video available</div>
         )}
       </div>
-      <a
-        className="mt-2 inline-flex items-center gap-1 text-xs text-purple-700 hover:underline"
-        href={`https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' review')}`}
-        target="_blank"
-        rel="noreferrer"
-      >
-        <i className="fa-brands fa-youtube" /> Search more reviews
-      </a>
+      <div className="px-2 pb-2" />
     </div>
   );
 }

@@ -1,30 +1,30 @@
-# ----------------------------
-# BUILD STAGE
-# ----------------------------
-FROM node:20-alpine AS builder
+FROM node:20 as builder
+
 WORKDIR /app
 
-# install pnpm
-RUN npm install -g pnpm
+# Copy deps
+COPY package*.json ./
 
-# copy dependency files
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+RUN npm install
 
-# copy source
+# Copy all source
 COPY . .
 
-# build dengan mode sesuai argumen
+# Mode → dari GitHub build-args
 ARG MODE=dev
-RUN pnpm build -- --mode $MODE
 
-# ----------------------------
-# RUN STAGE
-# ----------------------------
-FROM nginx:1.27-alpine
-WORKDIR /usr/share/nginx/html
+# Print current mode
+RUN echo "Building FE in MODE=$MODE"
 
-COPY --from=builder /app/dist ./
+# BUILD SESUAI MODE:
+RUN npm run build -- --mode $MODE
+
+
+# ---------- RUNTIME ----------
+FROM nginx:alpine
+
+# Copy dist hasil build
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

@@ -2,13 +2,14 @@ GiftFinder is a smart gifting application developed together with Attar Asmawan 
 
 Each recommended gift can be redeemed at selected merchants through digital vouchers, creating a simple, personal, and seamless gifting experience.
 
-🚀 Tech Stack
+# 🚀 Tech Stack
 
 This frontend is built using:
 
-Vite
-React
-TypeScript
-TailwindCSS
-shadcn/ui
+- Vite
+- React
+- TypeScript
+- TailwindCSS
+- shadcn/ui
+
 This stack ensures the app remains lightweight, fast, and scalable for future development.

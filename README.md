@@ -1,17 +1,14 @@
-# Gift Finder
+GiftFinder is a smart gifting application developed together with Attar Asmawan under the Sevenrose brand. The platform helps users discover personalized gift recommendations based on preferences, special occasions, and recipient profiles.
 
-Vite + React + TypeScript starter scaffold.
+Each recommended gift can be redeemed at selected merchants through digital vouchers, creating a simple, personal, and seamless gifting experience.
 
-Quick start
+🚀 Tech Stack
 
-1. Install dependencies
+This frontend is built using:
 
-   npm install
-
-2. Run dev server
-
-   npm run dev
-
-3. Build
-
-   npm run build
+Vite
+React
+TypeScript
+TailwindCSS
+shadcn/ui
+This stack ensures the app remains lightweight, fast, and scalable for future development.

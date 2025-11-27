@@ -41,7 +41,6 @@ jobs:
           push: true
           file: ./Dockerfile
           build-args: |
-            MODE=${{ github.ref_name }}
             VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
             VITE_APP_ENV=${{ env.VITE_APP_ENV }}
           tags: |

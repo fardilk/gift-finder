@@ -9,6 +9,9 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: giftfinder-fe
+  # 🔹 Env khusus FE yang akan diteruskan ke Docker build
+  VITE_API_BASE_URL: ${{ github.ref_name == 'dev' && 'http://103.179.57.4:8082' || 'https://api.giftfinder.com' }}
+  VITE_APP_ENV: ${{ github.ref_name == 'dev' && 'stag' || 'prod' }}
 
 jobs:
   build-and-push:
@@ -40,6 +43,8 @@ jobs:
           file: ./Dockerfile
           build-args: |
             MODE=${{ github.ref_name }}
+            VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
+            VITE_APP_ENV=${{ env.VITE_APP_ENV }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
 

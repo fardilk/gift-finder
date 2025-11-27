@@ -2,23 +2,30 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install deps
 COPY package*.json ./
 RUN npm install
 
-# copy all files
+# Copy source
 COPY . .
 
-# build args MODE, e.g. dev / main → stag / prod
-ARG MODE=dev
+# 🔹 Build-time args dari GitHub Actions
+ARG VITE_API_BASE_URL
+ARG VITE_APP_ENV
 
-# copy env sesuai MODE
-# contoh: MODE=dev → copy .env.dev jadi .env
-RUN if [ -f ".env.$MODE" ]; then cp .env.$MODE .env; fi
+# 🔹 Expose ke environment agar Vite bisa baca saat build
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_APP_ENV=$VITE_APP_ENV
 
+# Build FE (harusnya pakai Vite di npm run build)
 RUN npm run build
 
+# ---- Runtime ----
 FROM nginx:alpine
+
+# Copy hasil build ke nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
+
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

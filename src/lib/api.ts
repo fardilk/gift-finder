@@ -1,7 +1,5 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-// Prefer VITE_API_URL, fallback to VITE_API_BASE_URL.
-// In dev, default to relative base ('') so Vite proxy can avoid CORS; in prod fallback to localhost:3000.
 const { VITE_API_URL, VITE_API_BASE_URL } = import.meta.env as unknown as {
   VITE_API_URL?: string;
   VITE_API_BASE_URL?: string;

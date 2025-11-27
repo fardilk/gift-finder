@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: giftfinder-fe
-  VITE_API_BASE_URL: ${{ github.ref_name == 'dev' && 'https://103.179.57.4:8082' || 'https://api.giftfinder.com' }}
+  VITE_API_BASE_URL: ${{ github.ref_name == 'dev' && '/api' || 'https://api.giftfinder.com' }}
   VITE_APP_ENV: ${{ github.ref_name == 'dev' && 'stag' || 'prod' }}
 
 jobs:

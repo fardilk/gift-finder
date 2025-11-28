@@ -44,11 +44,13 @@ export async function meApi(): Promise<MeResponse> {
 // Backend-driven menu: allow multiple key names to support different backends
 export type MenuEntry = {
   id?: string;
+  key?: string; // Semantic key like "organizations", "dashboard", etc.
   title?: string;
   name?: string;
   url?: string;
   to?: string;
   icon?: string;
+  parentId?: string | null;
   children?: MenuEntry[];
 };
 

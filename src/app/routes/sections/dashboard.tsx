@@ -21,6 +21,15 @@ const AccountsPage = React.lazy(() => import('src/pages/settings/accounts'));
 const UserManagementPage = React.lazy(() => import('src/pages/user-management/userManagement'));
 const CreateUserPage = React.lazy(() => import('src/pages/user-management/detail/createUserForms'));
 const ViewDetailUserPage = React.lazy(() => import('src/pages/user-management/detail/viewDetailUser'));
+const OrganizationPage = React.lazy(() => import('src/pages/organization'));
+const OrganizationOverviewPage = React.lazy(() => import('src/pages/organization/overview'));
+const OrganizationProfilePage = React.lazy(() => import('src/pages/organization/profile'));
+const OrganizationMembersPage = React.lazy(() => import('src/pages/organization/members'));
+const OrganizationClustersPage = React.lazy(() => import('src/pages/organization/clusters'));
+const OrganizationOccasionsPage = React.lazy(() => import('src/pages/organization/occasions'));
+const OrganizationBenefitsPage = React.lazy(() => import('src/pages/organization/benefits'));
+const OrganizationEventsPage = React.lazy(() => import('src/pages/organization/events'));
+const OrganizationWalletPage = React.lazy(() => import('src/pages/organization/wallet'));
 
 export const dashboardRoutes: RouteObject[] = [
   {
@@ -120,5 +129,41 @@ export const dashboardRoutes: RouteObject[] = [
   {
     path: '/demo-form',
     element: wrapRoute(DemoFormPage, 'Demo Form', { useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations',
+    element: wrapRoute(OrganizationPage, 'Organizations', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/overview',
+    element: wrapRoute(OrganizationOverviewPage, 'Organization Overview', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/profile',
+    element: wrapRoute(OrganizationProfilePage, 'Organization Profile', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/members',
+    element: wrapRoute(OrganizationMembersPage, 'Organization Members', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/clusters',
+    element: wrapRoute(OrganizationClustersPage, 'Organization Clusters', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/occasions',
+    element: wrapRoute(OrganizationOccasionsPage, 'Organization Occasions', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/benefits',
+    element: wrapRoute(OrganizationBenefitsPage, 'Organization Benefits', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/events',
+    element: wrapRoute(OrganizationEventsPage, 'Organization Events', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/wallet',
+    element: wrapRoute(OrganizationWalletPage, 'Organization Wallet', { authOnly: true, useGlobalLayout: true }),
   },
 ];

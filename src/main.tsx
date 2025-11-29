@@ -4,7 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import App from './app';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from './shared/ui/toaster';
 import { CONFIG } from './config-global';
 import { store } from './store/store';
 import './index.css';
@@ -26,12 +26,11 @@ root.render(
       <BrowserRouter basename={CONFIG.site.basePath}>
         <Suspense>
           <Provider store={store}>
-            <Toaster>
-              <App />
-            </Toaster>
+            <App />
           </Provider>
         </Suspense>
       </BrowserRouter>
     </HelmetProvider>
+    <Toaster />
   </StrictMode>
 );

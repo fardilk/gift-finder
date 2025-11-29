@@ -1,66 +1,81 @@
 import * as React from 'react';
 
-export function Command({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={className}>{children}</div>;
-}
+export const Command = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={className}
+    {...props}
+  />
+));
+Command.displayName = 'Command';
 
-export function CommandInput(
-  {
-    value,
-    onValueChange,
-    placeholder,
-    onKeyDown,
-    className,
-  }: {
-    value: string;
-    onValueChange: (v: string) => void;
-    placeholder?: string;
-    onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
-    className?: string;
+export const CommandInput = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement> & {
+    onValueChange?: (value: string) => void;
   }
-) {
+>(({ className, onValueChange, ...props }, ref) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onValueChange?.(e.target.value);
+    props.onChange?.(e);
+  };
+
   return (
     <input
-      value={value}
-      onChange={(e) => onValueChange(e.target.value)}
-      placeholder={placeholder}
-      onKeyDown={onKeyDown}
+      ref={ref}
       className={className}
+      onChange={handleChange}
+      {...props}
     />
   );
-}
+});
+CommandInput.displayName = 'CommandInput';
 
-export function CommandList({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <ul role="listbox" className={className}>
-      {children}
-    </ul>
-  );
-}
+export const CommandList = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={className}
+    {...props}
+  />
+));
+CommandList.displayName = 'CommandList';
 
-export function CommandEmpty({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={className} role="status" aria-live="polite">
-      {children}
-    </div>
-  );
-}
+export const CommandEmpty = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={className}
+    {...props}
+  />
+));
+CommandEmpty.displayName = 'CommandEmpty';
 
-export function CommandItem(
-  { children, onSelect, value, className }: { children: React.ReactNode; value: string; onSelect?: (v: string) => void; className?: string }
-) {
+export const CommandItem = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    value?: string;
+    onSelect?: () => void;
+  }
+>(({ className, onSelect, ...props }, ref) => {
+  const handleClick = () => {
+    onSelect?.();
+  };
+
   return (
-    <li
-      role="option"
-      aria-selected={false}
-      tabIndex={-1}
+    <div
+      ref={ref}
       className={className}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onSelect?.(value);
-      }}
-    >
-      {children}
-    </li>
+      onClick={handleClick}
+      {...props}
+    />
   );
-}
+});
+CommandItem.displayName = 'CommandItem';

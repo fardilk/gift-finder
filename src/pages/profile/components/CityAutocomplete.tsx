@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Command, CommandInput, CommandList, CommandItem, CommandEmpty } from 'src/components/ui/command';
+import { Command, CommandInput, CommandList, CommandItem, CommandEmpty } from '@/components/ui/command';
 import { useCitySearch, useDebouncedValue, useCityByCode, type City } from '../hooks';
 
 type Props = {

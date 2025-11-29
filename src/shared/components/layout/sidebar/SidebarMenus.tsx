@@ -1,104 +1,127 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  Apple,
   Gift as GiftIcon,
   LayoutDashboard,
-  Package,
   Settings as SettingsIcon,
-  Sparkles,
   Users as UsersIcon,
-  UtensilsCrossed,
+  Package,
   LucideIcon,
 } from 'lucide-react';
 
 import { cn } from '../../../utils/cn';
 import { useMenu } from 'src/app/routes/hooks/use-menu';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import * as solidIcons from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useMenuContext } from '../MenuContext';
 import type { MenuEntry } from 'src/auth/api';
 
-// CSS utility classes
+/* -----------------------------
+   Styles
+----------------------------- */
 const baseItemClass =
   'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors duration-200';
 const activeItemClass = 'bg-purple-50 text-purple-700 shadow-sm';
-const inactiveItemClass = 'text-gray-600 hover:bg-gray-50';
+const inactiveItemClass = 'text-gray-500 hover:bg-gray-50';
 
-// Hook: match current URL with a menu path
+/* -----------------------------
+   Hook: Path Matcher
+----------------------------- */
 function usePathMatcher() {
   const location = useLocation();
   return React.useCallback(
-    (path: string) => {
-      const current = location.pathname;
-      return current === path || current.startsWith(`${path}/`);
-    },
+    (path: string) =>
+      location.pathname === path || location.pathname.startsWith(`${path}/`),
     [location.pathname],
   );
 }
 
-// UI-friendly menu type
+/* -----------------------------
+   Types
+----------------------------- */
 export type UiMenuItem = {
-  key: string; // UUID from backend (id field)
+  key: string;
   title: string;
   url?: string;
   iconComp?: LucideIcon;
+  faIcon?: IconDefinition;
   faIconClass?: string;
   children?: UiMenuItem[];
-  menuKey?: string; // Backend's key field (e.g., "organizations")
-  parentId?: string | null; // Used to distinguish parent vs child
+  menuKey?: string;
+  parentId?: string | null;
 };
 
+type BackendMenuEntry = MenuEntry & {
+  title?: string;
+  name?: string;
+  to?: string;
+  children?: BackendMenuEntry[];
+  icon?: string;
+  parentId?: string | null;
+};
+
+/* -----------------------------
+   Font Awesome Resolver
+----------------------------- */
+type SolidIconMap = typeof solidIcons;
+
+function resolveFaIcon(name?: string): IconDefinition | undefined {
+  if (!name) return undefined;
+
+  const cleaned = name
+    .trim()
+    .replace(/^fa-?/i, '')
+    .replace(/\s+/g, '-')
+    .replace(/_/g, '-')
+    .toLowerCase();
+
+  const pascal = cleaned
+    .split('-')
+    .filter(Boolean)
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join('');
+
+  const key = `fa${pascal}` as keyof SolidIconMap;
+  const candidate = solidIcons[key];
+
+  if (
+    candidate &&
+    typeof candidate === 'object' &&
+    'iconName' in candidate &&
+    'icon' in candidate
+  ) {
+    return candidate as IconDefinition;
+  }
+
+  return undefined;
+}
+
+/* -----------------------------
+   Parent Menu Component
+----------------------------- */
 function ParentItem({ item }: { item: UiMenuItem }) {
   const matchPath = usePathMatcher();
   const { setActiveParentMenu } = useMenuContext();
 
   const hasChildren = !!item.children?.length;
+  const childActive =
+    hasChildren &&
+    item.children!.some((child) => child.url && matchPath(child.url));
 
-  // Heuristic: items that might have submenus (for the right-chevron indicator)
-  const mightHaveChildren =
-    item.menuKey === 'organizations' ||
-    item.title.toLowerCase().includes('organization') ||
-    hasChildren;
+  const active =
+    childActive ||
+    (item.url ? matchPath(item.url) : false);
 
-  const childActive = hasChildren
-    ? item.children!.some((child) => child.url && matchPath(child.url))
-    : false;
-
-  // Automatically set active parent if route matches one of its children
   React.useEffect(() => {
-    if (hasChildren && (childActive || (item.url && matchPath(item.url)))) {
-      console.log('SidebarMenus - Auto-setting activeParentMenu:', item);
+    if (hasChildren && active) {
       setActiveParentMenu(item);
     }
-  }, [hasChildren, childActive, item, matchPath, setActiveParentMenu]);
-
-  const active = childActive || (item.url ? matchPath(item.url) : false);
-
-  // const handleClick = () => {
-  //   console.log('SidebarMenus - Menu clicked:', item.title);
-  //   console.log('SidebarMenus - UUID key:', item.key);
-  //   console.log('SidebarMenus - Menu key:', item.menuKey);
-  //   console.log('SidebarMenus - parentId:', item.parentId);
-  //   console.log('SidebarMenus - Might have children:', mightHaveChildren);
-
-  //   if (mightHaveChildren) {
-  //     console.log('SidebarMenus - Setting activeParentMenu to:', item);
-  //     setActiveParentMenu(item);
-  //   } else {
-  //     console.log('SidebarMenus - Clearing activeParentMenu');
-  //     setActiveParentMenu(null);
-  //   }
-  // };
+  }, [hasChildren, active, item, setActiveParentMenu]);
 
   const handleClick = () => {
-  console.log('SidebarMenus - Menu clicked:', item.title);
-  console.log('SidebarMenus - UUID key:', item.key);
-  console.log('SidebarMenus - Menu key:', item.menuKey);
-  console.log('SidebarMenus - parentId:', item.parentId);
-  console.log('SidebarMenus - Might have children:', mightHaveChildren);
-
-  setActiveParentMenu(item);
-};
-
+    setActiveParentMenu(item);
+  };
 
   return (
     <NavLink
@@ -112,150 +135,123 @@ function ParentItem({ item }: { item: UiMenuItem }) {
       }
       onClick={handleClick}
     >
-      {item.iconComp ? (
-        <item.iconComp className="h-4 w-4 text-gray-400" />
+      {item.faIcon ? (
+        <FontAwesomeIcon icon={item.faIcon} className="h-4 w-4" />
+      ) : item.iconComp ? (
+        <item.iconComp className="h-4 w-4" />
       ) : item.faIconClass ? (
-        <i className={cn(item.faIconClass, 'text-[0.9rem] text-gray-400')} />
+        <i className={cn(item.faIconClass, 'text-[0.9rem]')} />
       ) : null}
 
       <span>{item.title}</span>
-
-      {mightHaveChildren && (
-        <i className="fa-solid fa-chevron-right ml-auto text-xs text-gray-400" />
-      )}
     </NavLink>
   );
 }
 
+/* -----------------------------
+   Sidebar Menus
+----------------------------- */
 export function SidebarMenus() {
   const { data: menus, isLoading, error, refetch } = useMenu();
 
-  // Icon mapping from backend icon name → Lucide component
   const iconMap: Record<string, LucideIcon> = React.useMemo(
     () => ({
       LayoutDashboard,
-      Sparkles,
+      Settings: SettingsIcon,
       Gift: GiftIcon,
       Users: UsersIcon,
-      Settings: SettingsIcon,
       Package,
-      Apple,
-      UtensilsCrossed,
     }),
     [],
   );
 
-  // Convert backend MenuEntry → UiMenuItem (recursive)
   const toUi = React.useCallback(
-    (entry: MenuEntry): UiMenuItem => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const anyEntry = entry as any;
+    (entry: BackendMenuEntry): UiMenuItem => {
+      const e = entry;
 
-      const title = anyEntry.title ?? anyEntry.name ?? anyEntry.id ?? 'Untitled';
-      const url = anyEntry.url ?? anyEntry.to;
-      const key = anyEntry.id ? String(anyEntry.id) : `${title}-${url ?? 'group'}`;
+      const title = e.title ?? e.name ?? e.id ?? 'Untitled';
+      const url = e.url ?? e.to;
+      const key = String(e.id ?? `${title}-${url ?? 'group'}`);
 
-      const iconName = anyEntry.icon ?? '';
+      const iconName = e.icon ?? '';
       const iconComp = iconMap[iconName];
 
-      // Recursively map children (backend already sends nested structure)
-      const children = Array.isArray(anyEntry.children)
-        ? anyEntry.children.map(toUi)
+      const { faIcon, faIconClass } = resolveFinalFaIcon(iconName);
+      function resolveFinalFaIcon(iconName: string) {
+        const fa = resolveFaIcon(iconName);
+
+        if (fa) {
+          return {
+            faIcon: fa,
+            faIconClass: undefined as string | undefined,
+          };
+        }
+
+        if (iconName) {
+          return {
+            faIcon: undefined,
+            faIconClass: `fa-solid fa-${iconName.replace(/^fa-?/i, '')}`,
+          };
+        }
+
+        return { faIcon: undefined, faIconClass: undefined };
+      }
+
+
+      const children = Array.isArray(e.children)
+        ? e.children.map((child) => toUi(child))
         : undefined;
 
-      // Extract semantic menuKey from backend's 'key' field
-      // If not present, try to infer from URL path (e.g., /organizations → "organizations")
-      let menuKey = anyEntry.key;
+      let menuKey = e.key;
       if (!menuKey && url) {
-        const pathSegments = url.split('/').filter(Boolean);
-        if (pathSegments.length > 0) {
-          menuKey = pathSegments[0]; // Use first path segment as key
-        }
+        const seg = url.split('/').filter(Boolean);
+        if (seg.length) menuKey = seg[0];
       }
-      
-      const parentId = anyEntry.parentId ?? null;
 
       return {
         key,
         title: String(title),
         url: url ? String(url) : undefined,
         iconComp,
+        faIcon,
+        faIconClass,
         children,
-        menuKey: menuKey ? String(menuKey) : undefined,
-        parentId,
+        menuKey,
+        parentId: e.parentId ?? null,
       };
     },
     [iconMap],
   );
 
-  const uiMenus = React.useMemo(() => {
-    return menus ? menus.map(toUi) : [];
-  }, [menus, toUi]);
+  const uiMenus = React.useMemo(
+    () => (menus ? menus.map((m) => toUi(m as BackendMenuEntry)) : []),
+    [menus, toUi],
+  );
 
-  // ✅ Only parent-level menus: parentId === null OR filter by URL pattern
   const parentMenus = React.useMemo(() => {
-    // Filter logic:
-    // 1. Must have parentId === null OR undefined (not a child)
-    // 2. If backend sends flat list, also filter out URLs that look like children
-    //    (e.g., /organizations/overview is a child of /organizations)
-    const result = uiMenus.filter((m) => {
-      // First check: parentId must be null or undefined
-      if (m.parentId != null) {
-        return false;
-      }
-      
-      // Second check: filter out URLs that are sub-paths of other menus
-      // e.g., /organizations/overview should be filtered out if /organizations exists
+    return uiMenus.filter((m) => {
+      if (m.parentId != null) return false;
+
       if (m.url) {
-        const pathSegments = m.url.split('/').filter(Boolean);
-        // If URL has more than 1 segment, check if a parent with fewer segments exists
-        if (pathSegments.length > 1) {
-          const potentialParentPath = '/' + pathSegments[0];
+        const seg = m.url.split('/').filter(Boolean);
+        if (seg.length > 1) {
+          const parentPath = '/' + seg[0];
           const hasParent = uiMenus.some(
-            (other) => other.url === potentialParentPath && other.key !== m.key
+            (other) => other.url === parentPath && other.key !== m.key,
           );
-          if (hasParent) {
-            console.log(`Filtering out child menu: ${m.title} (${m.url}) - has parent at ${potentialParentPath}`);
-            return false;
-          }
+          if (hasParent) return false;
         }
       }
-      
       return true;
     });
-    
-    console.log('SidebarMenus - parentMenus (filtered):', result);
-    return result;
   }, [uiMenus]);
-
-  React.useEffect(() => {
-    if (uiMenus.length) {
-      console.log('========== Sidebar Menus ==========');
-      console.log('Raw menus from backend:', menus);
-      console.log('Sidebar normalized menu (UI):', uiMenus);
-      console.log(
-        'Menu keys:',
-        uiMenus.map((m) => ({
-          title: m.title,
-          key: m.key,
-          menuKey: m.menuKey,
-          parentId: m.parentId,
-          hasChildren: !!m.children?.length,
-        })),
-      );
-      console.log('Parent menus (filtered):');
-      parentMenus.forEach((m) => {
-        console.log(`  - ${m.title}: menuKey=${m.menuKey}, hasChildren=${!!m.children?.length}`);
-      });
-      console.log('===================================');
-    }
-  }, [uiMenus, menus, parentMenus]);
 
   return (
     <nav className="flex flex-col gap-1">
       {isLoading && (
         <div className="px-3 py-2 text-sm text-slate-500">Loading menu…</div>
       )}
+
       {error && (
         <div className="px-3 py-2 text-sm text-red-600">
           Failed to load menu.{' '}

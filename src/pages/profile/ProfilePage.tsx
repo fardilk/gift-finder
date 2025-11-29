@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ProfileForm, type ProfileFormValues } from './components/ProfileForm';
 import { useAuth } from 'src/auth/context/app-auth/AuthProvider';
 import { Navigate } from 'react-router-dom';
+import { showSuccessToast } from 'src/shared/components/toast/successToast';
 
 export default function ProfilePage() {
   const { isAuthenticated } = useAuth();
@@ -39,18 +40,36 @@ export default function ProfilePage() {
   const getMaritalName = (code?: string) => maritalStatuses.find(m => m.code === code)?.name ?? code;
 
   async function onSubmit(values: ProfileFormValues) {
+    console.log('='.repeat(80));
+    console.log('[ProfilePage] ⏳ Starting profile save...');
     console.log('[ProfilePage] Submitting values:', values);
+    
     const payload: Person = { ...values } as Person;
-    const updated = await save.mutateAsync(payload);
-    console.log('[ProfilePage] Save result:', updated);
-    if (updated) {
-      // update cache immediately with server-returned person
-      queryClient.setQueryData<Person | null>(['person', 'me'], (prev) => ({ ...(prev ?? {} as Person), ...updated }));
-    } else {
-      // fallback: invalidate so fetchMyPerson re-reads from server
-      await queryClient.invalidateQueries({ queryKey: ['person', 'me'] });
+    
+    try {
+      const updated = await save.mutateAsync(payload);
+      console.log('[ProfilePage] ✅ Save successful! Result:', updated);
+      
+      if (updated) {
+        // update cache immediately with server-returned person
+        queryClient.setQueryData<Person | null>(['person', 'me'], (prev) => ({ ...(prev ?? {} as Person), ...updated }));
+      } else {
+        // fallback: invalidate so fetchMyPerson re-reads from server
+        await queryClient.invalidateQueries({ queryKey: ['person', 'me'] });
+      }
+      
+      console.log('[ProfilePage] 🎉 About to show success toast...');
+      showSuccessToast('Profile');
+      console.log('[ProfilePage] 🎉 Success toast called');
+      
+      setEditing(false);
+      console.log('[ProfilePage] ✅ Profile save complete!');
+      console.log('='.repeat(80));
+    } catch (error) {
+      console.error('[ProfilePage] ❌ Save failed:', error);
+      console.log('='.repeat(80));
+      throw error;
     }
-    setEditing(false);
   }
 
   // Display name with fallback

@@ -29,7 +29,11 @@ const OrganizationClustersPage = React.lazy(() => import('src/pages/organization
 const OrganizationOccasionsPage = React.lazy(() => import('src/pages/organization/occasions'));
 const OrganizationBenefitsPage = React.lazy(() => import('src/pages/organization/benefits'));
 const OrganizationEventsPage = React.lazy(() => import('src/pages/organization/events'));
-const OrganizationWalletPage = React.lazy(() => import('src/pages/organization/wallet'));
+const OrganizationTokenPage = React.lazy(() => import('src/pages/organization/token'));
+const EmployeeDetailPage = React.lazy(() => import('src/pages/organization/employeeDetail'));
+const PicksDetailPage = React.lazy(() => import('src/pages/organization/picksDetail'));
+const TransactionConfirmPage = React.lazy(() => import('src/pages/organization/transactionConfirm'));
+const TokenTopUpPage = React.lazy(() => import('src/pages/organization/tokenTopUp'));
 
 export const dashboardRoutes: RouteObject[] = [
   {
@@ -136,7 +140,7 @@ export const dashboardRoutes: RouteObject[] = [
   },
   {
     path: '/organizations/overview',
-    element: wrapRoute(OrganizationOverviewPage, 'Organization Overview', { authOnly: true, useGlobalLayout: true }),
+    element: wrapRoute(OrganizationOverviewPage, 'Organization Overview', { authOnly: true, useGlobalLayout: false }),
   },
   {
     path: '/organizations/profile',
@@ -164,6 +168,22 @@ export const dashboardRoutes: RouteObject[] = [
   },
   {
     path: '/organizations/wallet',
-    element: wrapRoute(OrganizationWalletPage, 'Organization Wallet', { authOnly: true, useGlobalLayout: true }),
+    element: wrapRoute(OrganizationTokenPage, 'Organization Token', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/members/:employeeId',
+    element: wrapRoute(EmployeeDetailPage, 'Employee Detail', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/picks',
+    element: wrapRoute(PicksDetailPage, 'Picks (Wish List)', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/transaction-confirm',
+    element: wrapRoute(TransactionConfirmPage, 'Confirm Transaction', { authOnly: true, useGlobalLayout: true }),
+  },
+  {
+    path: '/organizations/token-topup',
+    element: wrapRoute(TokenTopUpPage, 'Top Up Token', { authOnly: true, useGlobalLayout: true }),
   },
 ];

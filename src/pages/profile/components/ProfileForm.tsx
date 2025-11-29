@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CityAutocomplete } from './CityAutocomplete';
 import { type Person } from '../api';
 import { useGenders, useEthnicities, useJobs, useMaritalStatuses } from '../hooks';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 const SALUTATIONS = ['Mr', 'Ms', 'Mrs', 'Dr'] as const;
 
@@ -59,7 +59,7 @@ export function ProfileForm({ initial, onSubmit, onCancel }: {
 
   async function handleSubmit(data: ProfileFormValues) {
     await onSubmit(data);
-    toast({ title: 'Profile updated', description: 'Your profile changes were saved.' });
+    toast.success('Profile updated - Your profile changes were saved.');
   }
 
   return (

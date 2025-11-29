@@ -5,10 +5,11 @@ import { useAuth } from 'src/auth/context/app-auth/AuthProvider';
 
 const MENU_CACHE_KEY = 'menu_cache_v1';
 
-export function useMenu() {
+export function useMenu(): UseQueryResult<MenuEntry[], Error> {
   const { isAuthenticated, token, user } = useAuth();
 
-  const cached: MenuEntry[] | undefined = React.useMemo(() => {
+  // Read cached menu from localStorage safely
+  const cached = React.useMemo<MenuEntry[] | undefined>(() => {
     try {
       const raw = localStorage.getItem(MENU_CACHE_KEY);
       return raw ? (JSON.parse(raw) as MenuEntry[]) : undefined;
@@ -17,33 +18,30 @@ export function useMenu() {
     }
   }, []);
 
-  const query = useQuery({
+  const query = useQuery<MenuEntry[], Error>({
     queryKey: ['menu'],
     queryFn: async () => {
       const data = await getMenuApi();
+
+      // Cache menu
       try {
         localStorage.setItem(MENU_CACHE_KEY, JSON.stringify(data));
       } catch {
-        // ignore storage errors
+        /* ignore storage write errors */
       }
+
       return data;
     },
-    staleTime: 10 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
     refetchOnWindowFocus: false,
     retry: 3,
     placeholderData: cached,
     initialData: cached,
-    // Defer until we have either a token or a hydrated user to avoid early 401s on refresh
-    enabled: isAuthenticated && (!!token || !!user),
-  }) as UseQueryResult<MenuEntry[], Error>;
 
-  React.useEffect(() => {
-    if (query.data) {
-      // eslint-disable-next-line no-console
-      console.log('GET /menu response (useMenu):', query.data);
-    }
-  }, [query.data]);
+    // Enable only if authenticated and token/user ready
+    enabled: isAuthenticated && (token !== null || user !== null),
+  });
 
   return query;
 }
